@@ -1,0 +1,33 @@
+name: Surveillance Autolis
+
+# Toutes les 5 minutes (GitHub peut retarder un lancement de quelques minutes), et à la main depuis l'onglet Actions.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+# Un seul contrôle à la fois : jamais deux tickets ou deux messages pour la même panne.
+concurrency:
+  group: surveillance
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Contrôler le site, sa santé et l'admin
+        run: node scripts/check.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

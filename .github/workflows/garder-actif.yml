@@ -1,0 +1,26 @@
+name: Garder la surveillance active
+
+# GitHub met en pause les tâches planifiées d'un dépôt public sans activité depuis 60 jours.
+# Une fois par mois, ce petit enregistrement garde le dépôt « actif » : la surveillance ne s'arrête jamais toute seule.
+on:
+  schedule:
+    - cron: '17 4 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Noter la date du jour
+        run: |
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > derniere-activite.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add derniere-activite.txt
+          git commit -m "garder la surveillance active" || exit 0
+          git push
